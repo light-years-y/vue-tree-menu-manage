@@ -1,14 +1,30 @@
 {
-  "name": "vue-tree",
-  "version": "0.1.0",
-  "private": true,
+  "name": "vue-tree-menu-manage",
+  "version": "1.0.0",
+  "description": "A vue components based on elementUI,can be used for menu management,category management ,etc",
+  "author": "sxy",
+  "license": "MIT",
+  "private": false,
+  "main": "lib/menuManage.umd.min.js",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "build": "vue-cli-service build --target lib --name menuManage --dest lib ./src/index.js"
   },
+  "files": [
+    "lib"
+  ],
+  "keywords": [
+    "vue",
+    "elementui",
+    "tree",
+    "menu",
+    "management",
+    "management",
+    "menuManagement",
+    "categoryManagement"
+  ],
   "dependencies": {
     "core-js": "^3.6.5",
+    "element-ui": "^2.15.5",
     "vue": "^2.6.11"
   },
   "devDependencies": {
@@ -16,12 +32,15 @@
     "@vue/cli-plugin-eslint": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
     "babel-eslint": "^10.1.0",
+    "babel-plugin-component": "^1.1.1",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
+    "node-sass": "^6.0.1",
+    "sass-loader": "^12.1.0",
     "vue-template-compiler": "^2.6.11"
   },
   "eslintConfig": {
-    "root": true,
+    "root": false,
     "env": {
       "node": true
     },
