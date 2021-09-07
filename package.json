@@ -1,6 +1,6 @@
 {
   "name": "vue-tree-menu-manage",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A vue components based on elementUI,can be used for menu management,category management ,etc",
   "author": "sxy",
   "license": "MIT",
@@ -8,6 +8,10 @@
   "main": "lib/menuManage.umd.min.js",
   "scripts": {
     "build": "vue-cli-service build --target lib --name menuManage --dest lib ./src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/light-years-y/vue-tree-menu-manage"
   },
   "files": [
     "lib"

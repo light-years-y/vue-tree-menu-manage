@@ -17,7 +17,7 @@
           </el-row>
           <el-tree
             ref="menuTree"
-            :data="treeDataArr"
+            :data="treeProps.treeData"
             :props="treeProps"
             :filter-node-method="filterNode"
             :expand-on-click-node="false"
@@ -38,6 +38,7 @@
                   @click="() => handleRemove(node, data)"
                 ></i>
                 <i
+                  v-if="!data[treeProps.hideAddBtn]"
                   class="el-icon-circle-plus-outline grey mgl1"
                   @click="() => handleEditAdd(node, data, 'add')"
                 ></i>
@@ -68,6 +69,7 @@
                     v-model="formParam[item.prop]"
                     :placeholder="item.placeholder || '请输入'"
                     type="textarea"
+                    :disabled="currentType == 'edit' && item.editDisable"
                   ></el-input>
                 </el-form-item>
                 <el-form-item
@@ -79,6 +81,7 @@
                   <el-switch
                     v-model="formParam[item.prop]"
                     :active-color="item.activeColor"
+                    :disabled="currentType == 'edit' && item.editDisable"
                   ></el-switch>
                 </el-form-item>
                 <el-form-item
@@ -89,9 +92,10 @@
                 >
                   <el-cascader
                     ref="menuCascader"
-                    :options="treeDataArr"
+                    :options="treeProps.treeData"
                     :props="{ checkStrictly: true }"
                     :placeholder="item.placeholder || '请选择'"
+                    :disabled="currentType == 'edit' && item.editDisable"
                     v-model="parentIdArr"
                     @change="handleParentSelect"
                     clearable
@@ -107,6 +111,7 @@
                   <el-input
                     v-model="formParam[item.prop]"
                     :placeholder="item.placeholder || '请输入'"
+                    :disabled="currentType == 'edit' && item.editDisable"
                   ></el-input>
                 </el-form-item>
               </template>
@@ -149,29 +154,22 @@ export default {
     ...Switch.props,
     ...Tree.props,
     formData: Array,
-    currentId:[String, Number],
+    currentId: [String, Number],
     parentId: [String, Number],
-    treeDataArr: {
-      type: Array,
-      default: function() {
-        return [];
-      },
-    },
     formShow: {
       type: Boolean, // 菜单编辑区域显示隐藏
       default: false,
     },
-    cascaderOptions: {
-      type: Object,
-      default: function () {
-        return { label: 'permissionName', value: "permissionId", }
-      }
-    },
     treeProps: {
       type: Object,
-      default: function () {
-        return { children: 'children', label: "label", }
-      }
+      default: function() {
+        return {
+          children: "children",
+          label: "categoryName",
+          hideAddBtn: "isLeaf",
+          treeData: [], 
+        };
+      },
     },
     addRootBtnTitle: {
       type: String,
@@ -208,8 +206,12 @@ export default {
     };
   },
   watch: {
-    treeDataArr(val) {
-      this.recursionCascaderFuncMixin(val, this.cascaderOptions);
+    "treeProps.treeData": {
+      deep: true,
+      handler(val) {
+        let cascaderOptions = this.formData.filter(item => item.elItem == 'cascader')[0]
+        this.recursionCascaderFuncMixin(val, cascaderOptions);
+      },
     },
     filterText(val) {
       this.$refs.menuTree.filter(val);
@@ -309,8 +311,8 @@ export default {
      */
     recursionCascaderFuncMixin(data, nameMap) {
       data.forEach((item) => {
-        item.label = item[nameMap.label];
-        item.value = item[nameMap.value];
+        item.label = item[nameMap.cascaderLable] || item['permissionName'];
+        item.value = item[nameMap.cascaderValue] || item['permissionId'];
 
         if (item.children) {
           this.recursionCascaderFuncMixin(item.children, nameMap);
@@ -345,7 +347,7 @@ export default {
 </style>
 
 <style scoped>
-.fr{
+.fr {
   float: right;
 }
 .elRow {
