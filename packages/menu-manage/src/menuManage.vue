@@ -144,6 +144,7 @@ import {
   Tree,
 } from "element-ui";
 import validator from "@/utils/validator";
+import { objShallowAssignment, isObjF, isUndefined } from "@/utils/tools";
 
 export default {
   name: "menuManage",
@@ -167,7 +168,7 @@ export default {
           children: "children",
           label: "categoryName",
           hideAddBtn: "isLeaf",
-          treeData: [], 
+          treeData: [],
         };
       },
     },
@@ -202,6 +203,7 @@ export default {
       currentType: "add",
       filterText: "", // 过滤
       parentIdArr: [], // 父级菜单已选id
+      defaultParentId: formRawData.defaultParentId,
       elTreeShow: this.formShow,
     };
   },
@@ -209,7 +211,9 @@ export default {
     "treeProps.treeData": {
       deep: true,
       handler(val) {
-        let cascaderOptions = this.formData.filter(item => item.elItem == 'cascader')[0]
+        let cascaderOptions = this.formData.filter(
+          (item) => item.elItem == "cascader"
+        )[0];
         this.recursionCascaderFuncMixin(val, cascaderOptions);
       },
     },
@@ -219,19 +223,23 @@ export default {
   },
   created() {},
   methods: {
-    isObjF(data) {
-      return Object.prototype.toString.call(data) === "[object Object]";
-    },
     dealFormData(arr) {
       let formParam = {};
       let formRules = {};
+      let defaultParentId = null;
+
       arr.forEach((item) => {
-        formParam[item.prop] =
-          item.defaultValue != "undefined" ? item.defaultValue : "";
+        // 级联没有默认值，设为0
+        item.elItem == "cascader" && isUndefined(item.defaultValue) && (item.defaultValue = 0)
+
+        formParam[item.prop] = 
+          !isUndefined(item.defaultValue)  ? item.defaultValue : "";
+
+        item.elItem == "cascader" && (defaultParentId = item.defaultValue); // // 添加根元素赋默认值
 
         if (typeof item.rules == "undefined") {
           formRules[item.prop] = validator.rulesNotEmpty;
-        } else if (this.isObjF(item.rules)) {
+        } else if (isObjF(item.rules)) {
           formRules[item.prop] = item.rules;
         } else if (!item.rules) {
           return;
@@ -241,6 +249,7 @@ export default {
       return {
         formParam,
         formRules,
+        defaultParentId,
       };
     },
     validateForm() {
@@ -260,7 +269,7 @@ export default {
       // 父级菜单选择赋值
       arr.length != 0
         ? (this.formParam[this.parentId] = arr[arr.length - 1])
-        : (this.formParam[this.parentId] = 0);
+        : (this.formParam[this.parentId] = this.defaultParentId);
       this.$refs.menuCascader.dropDownVisible = false;
     },
     handleAddRoot() {
@@ -268,8 +277,6 @@ export default {
       this.elTreeShow = true;
       this.resetForm("elForm");
       this.formParam = Object.assign({}, this.formRawData.formParam);
-      this.parentIdArr = [];
-      this.formParam[this.parentId] = "";
     },
     handleEditAdd(node, data, type) {
       this.currentType = type;
@@ -284,20 +291,18 @@ export default {
           this.formParam[this.parentId] = data[this.currentId];
           this.recursionParentIdFunc(node);
         } else if (type == "edit") {
-          this.formParam = { ...data };
-          this.formParam[this.parentId] = data[this.parentId];
+          objShallowAssignment(this.formParam, data);
+          this.formParam[this.currentId] = data[this.currentId];
           this.recursionParentIdFunc(node.parent);
         }
       });
     },
     // 父级菜单回显
     recursionParentIdFunc(node) {
-      this.parentIdArr.unshift(node.data[this.currentId]);
-      if (
-        node.parent &&
-        Object.prototype.toString.call(node.parent.data) != "[object Array]"
-      ) {
-        this.recursionParentIdFunc(node.parent);
+
+      if(isObjF(node.data)){ // 非根级元素，因为回显是从一级开始回显，不是从根级回显
+        this.parentIdArr.unshift(node.data[this.currentId])
+        node.parent && this.recursionParentIdFunc(node.parent);
       }
     },
     filterNode(value, data) {
@@ -311,8 +316,8 @@ export default {
      */
     recursionCascaderFuncMixin(data, nameMap) {
       data.forEach((item) => {
-        item.label = item[nameMap.cascaderLable] || item['permissionName'];
-        item.value = item[nameMap.cascaderValue] || item['permissionId'];
+        item.label = item[nameMap.cascaderLable] || item["permissionName"];
+        item.value = item[nameMap.cascaderValue] || item["permissionId"];
 
         if (item.children) {
           this.recursionCascaderFuncMixin(item.children, nameMap);
